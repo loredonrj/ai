@@ -24,7 +24,7 @@ def multiply(a: float, b: float) -> float:
 
 # Create or load RAG index so I need not reprocess the documents every time I run the script.
 
-##Check if a stored index exists
+##Check if a stored index exists (error handling)
 if not os.path.exists("storage"):
     ### If it exists, load the existing index
     documents = SimpleDirectoryReader("data").load_data()
