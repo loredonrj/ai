@@ -10,20 +10,32 @@ from llama_index.core.agent.workflow import FunctionAgent
 from llama_index.core.workflow import Context 
 
 #import RAG capabilities
-from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
+from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, StorageContext, load_index_from_storage
+
 
 # Load environment variables
 load_dotenv()
 
 
-# Define a simple calculator tool
+# Define a simple calculator tool that multiplies 2 numbers
 def multiply(a: float, b: float) -> float:
     """Useful for multiplying two numbers."""
     return a * b
 
-# Create a RAG tool
-documents = SimpleDirectoryReader("data").load_data()
-index = VectorStoreIndex.from_documents(documents)
+# Create or load RAG index so I need not reprocess the documents every time I run the script.
+
+##Check if a stored index exists
+if not os.path.exists("storage"):
+    ### If it exists, load the existing index
+    documents = SimpleDirectoryReader("data").load_data()
+    index = VectorStoreIndex.from_documents(documents)
+    index.storage_context.persist("storage")
+else:
+    ### If a stored index doesn't exist, create and store a new one
+    storage_context = StorageContext.from_defaults(persist_dir="storage")
+    index = load_index_from_storage(storage_context)
+
+#Create the query engine from whichever index is available
 query_engine = index.as_query_engine()
 
 
@@ -51,7 +63,7 @@ async def main():
     # response = await agent.run("What is my name?", ctx=ctx)
     # 3 run agent with context and ask about the content of the document : agent can now seamlessly switch between tools (using the calculator and searching through documents to answer questions).
     response = await agent.run(
-        "Les activités BNC sont exclues du dispositif de la ZAFR? Et quel est le résultat de 9*4?"
+        "Le bénéfice de la exonération est-il perdu dès lors que la commune sort de la liste des ZAFR? Et quel est le résultat de 20*4?"
     )
     print(str(response))
 
